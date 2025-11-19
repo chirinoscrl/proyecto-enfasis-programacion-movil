@@ -1,0 +1,1178 @@
+// src/app/pages/gameplay/gameplay.page.ts
+import { AfterViewInit, Component, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
+import * as Phaser from 'phaser';
+
+@Component({
+  selector: 'app-gameplay',
+  templateUrl: './gameplay.page.html',
+  styleUrls: ['./gameplay.page.scss'],
+  standalone: false,
+})
+export class GameplayPage implements AfterViewInit, OnDestroy {
+
+  private game?: Phaser.Game;
+  private menuEventHandler = () => this.goToMenu();
+
+  constructor(private router: Router) {}
+
+  ngAfterViewInit(): void {
+    window.addEventListener('cat-game-menu', this.menuEventHandler as any);
+
+    const state: any = history.state || {};
+    const initialWorld =
+      typeof state.worldIndex === 'number' ? state.worldIndex : 0;
+    const avatarKey =
+      typeof state.avatarKey === 'string' ? state.avatarKey : 'cat-black';
+
+    CatPlatformerScene.initialWorldIndex = Phaser.Math.Clamp(initialWorld, 0, 2);
+    CatPlatformerScene.initialAvatarKey = avatarKey;
+
+    const config: Phaser.Types.Core.GameConfig = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      parent: 'game-container',
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { x: 0, y: 900 },
+          debug: false,
+        },
+      },
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+      },
+      scene: [CatPlatformerScene],
+    };
+
+    this.game = new Phaser.Game(config);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('cat-game-menu', this.menuEventHandler as any);
+
+    if (this.game) {
+      this.game.destroy(true);
+      this.game = undefined;
+    }
+  }
+
+  restartLevel(): void {
+    const scene = CatPlatformerScene.current;
+    if (scene) {
+      scene.restartFromUI();
+    }
+  }
+
+  goToMenu(): void {
+    this.router.navigate(['/menu']);
+  }
+
+  // ========= Controles táctiles: flechas y salto =========
+
+  // Movimiento a la izquierda
+  onLeftDown(): void {
+    const scene = CatPlatformerScene.current;
+    if (scene) {
+      scene.mobileLeft = true;
+    }
+  }
+
+  onLeftUp(): void {
+    const scene = CatPlatformerScene.current;
+    if (scene) {
+      scene.mobileLeft = false;
+    }
+  }
+
+  // Movimiento a la derecha
+  onRightDown(): void {
+    const scene = CatPlatformerScene.current;
+    if (scene) {
+      scene.mobileRight = true;
+    }
+  }
+
+  onRightUp(): void {
+    const scene = CatPlatformerScene.current;
+    if (scene) {
+      scene.mobileRight = false;
+    }
+  }
+
+  // Salto
+  onJumpDown(): void {
+    const scene = CatPlatformerScene.current;
+    if (scene) {
+      scene.mobileJump = true;
+    }
+  }
+
+  onJumpUp(): void {
+    const scene = CatPlatformerScene.current;
+    if (scene) {
+      scene.mobileJump = false;
+    }
+  }
+}
+
+/**
+ * Lógica del runner con Phaser.
+ */
+class CatPlatformerScene extends Phaser.Scene {
+  static current: CatPlatformerScene | null = null;
+  static initialWorldIndex = 0;
+  static initialAvatarKey = 'cat-black';
+
+  // 0 = Desierto, 1 = Bosque, 2 = Ciudad
+  private worldConfigs = [
+    {
+      name: 'Desierto',
+      bgColor: 0xffa726,
+      platformKey: 'platformDesert',
+      hazardKey: 'hazardDesert',
+    },
+    {
+      name: 'Bosque',
+      bgColor: 0x88c999,
+      platformKey: 'platformForest',
+      hazardKey: 'hazardForest',
+    },
+    {
+      name: 'Ciudad',
+      bgColor: 0x9e9e9e,
+      platformKey: 'platformCity',
+      hazardKey: 'hazardCity',
+    },
+  ];
+
+  // Estado general del nivel
+  private worldIndex = 0;
+  private lives = 3;
+  private coinsCount = 0;
+
+  private readonly levelMeters = 6000;
+  private readonly pixelsPerMeter = 10;
+  private levelWidth = this.levelMeters * this.pixelsPerMeter; // 60000 px
+
+  // Entidades
+  private player!: Phaser.Physics.Arcade.Sprite;
+  private platforms!: Phaser.Physics.Arcade.Group;
+  private bugs!: Phaser.Physics.Arcade.Group;
+  private coins!: Phaser.Physics.Arcade.Group;
+  private portal!: Phaser.Physics.Arcade.Sprite;
+  private mushrooms!: Phaser.Physics.Arcade.Group;
+  private obstacles!: Phaser.Physics.Arcade.Group;
+
+  // Controles
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+
+  // Controles móviles: estas banderas las modifico desde Angular
+  public mobileLeft = false;
+  public mobileRight = false;
+  public mobileJump = false;
+
+  // HUD
+  private livesText!: Phaser.GameObjects.Text;
+  private coinsText!: Phaser.GameObjects.Text;
+  private worldText!: Phaser.GameObjects.Text;
+  private distanceText!: Phaser.GameObjects.Text;
+
+  // Respawn / estado
+  private isRespawning = false;
+  private isGameOver = false;
+  private isInvulnerable = false;
+  private invulnTween?: Phaser.Tweens.Tween;
+
+  private lastSafeX = 120;
+  private lastSafeY = 480;
+
+  private gameOverUI?: Phaser.GameObjects.Container;
+
+  private selectedAvatarKey = 'cat-black';
+
+  // Texturas dependientes del mundo
+  private platformTextureKey = 'platformForest';
+  private hazardTextureKey = 'hazardForest';
+  private obstacleTextureKey = 'obstacleForest';
+
+  private portalTargetX = this.levelWidth;
+  private lastMeterReported = 0;
+
+  constructor() {
+    super('CatPlatformerScene');
+  }
+
+  preload(): void {
+    // Aquí no cargo assets externos porque genero todo por código
+  }
+
+  create(): void {
+    CatPlatformerScene.current = this;
+
+    this.worldIndex = CatPlatformerScene.initialWorldIndex;
+    this.selectedAvatarKey = CatPlatformerScene.initialAvatarKey || 'cat-black';
+
+    this.createTextures();
+
+    if (!this.textures.exists(this.selectedAvatarKey)) {
+      this.selectedAvatarKey = 'cat-black';
+    }
+
+    this.cursors = this.input.keyboard!.createCursorKeys() as Phaser.Types.Input.Keyboard.CursorKeys;
+
+    this.createHUD();
+    this.createRun();
+  }
+
+  override update(): void {
+    if (this.isGameOver) return;
+
+    this.handleControls();
+    this.updateBugs();
+    this.updateMushrooms();
+    this.checkFall();
+    this.updateDistanceHUD();
+    
+  }
+
+  // -------------------------------------------------
+  // Creación de texturas
+  // -------------------------------------------------
+  private createTextures(): void {
+    // Plataformas por mundo
+    this.createRectTexture('platformDesert', 120, 24, 0x7cb342);
+    this.createRectTexture('platformForest', 120, 24, 0x8d6e63);
+    this.createRectTexture('platformCity', 120, 24, 0x000000);
+
+    // Avatares
+    this.createCatTexture('cat-black', 0x000000);
+    this.createCatTexture('cat-persian', 0xfff3e0);
+    this.createCatTexture('cat-siamese', 0xd7ccc8);
+    this.createCatTexture('cat-tabby', 0xffb74d);
+
+    // Águila voladora, moneda redonda y portal
+    this.createEagleTexture('flyingBug');
+    this.createCoinTexture('coin');
+    this.createRectTexture('portal', 40, 80, 0x7e57c2);
+
+    // Peligros por mundo
+    this.createMushroomTexture('hazardForest');
+    this.createScorpionTexture('hazardDesert');
+    this.createDogTexture('hazardCity');
+
+    // Obstáculos por mundo
+    this.createDesertPalmTexture('obstacleDesert');
+    this.createForestTreeTexture('obstacleForest');
+    this.createCityBuildingTexture('obstacleCity');
+  }
+
+  private createRectTexture(key: string, width: number, height: number, color: number): void {
+    const g = this.add.graphics();
+    g.fillStyle(color, 1);
+    g.fillRect(0, 0, width, height);
+    g.generateTexture(key, width, height);
+    g.destroy();
+  }
+
+  private createCatTexture(key: string, bodyColor: number): void {
+    const w = 40;
+    const h = 40;
+    const g = this.add.graphics();
+
+    g.fillStyle(bodyColor, 1);
+    g.fillRoundedRect(10, 18, 20, 16, 4);
+    g.fillRoundedRect(9, 6, 16, 14, 4);
+
+    g.fillTriangle(10, 8, 13, 2, 16, 8);
+    g.fillTriangle(18, 8, 21, 2, 24, 8);
+
+    g.fillRect(12, 30, 4, 6);
+    g.fillRect(18, 30, 4, 6);
+
+    g.fillRect(26, 20, 3, 10);
+    g.fillRect(26, 16, 3, 4);
+
+    const muzzleColor = Phaser.Display.Color.IntegerToColor(bodyColor).brighten(20).color;
+    g.fillStyle(muzzleColor, 1);
+    g.fillRoundedRect(12, 14, 6, 4, 2);
+
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  private createCoinTexture(key: string): void {
+    const size = 26;
+    const g = this.add.graphics();
+
+    g.fillStyle(0xffd54f, 1);
+    g.fillCircle(size / 2, size / 2, size / 2);
+
+    g.lineStyle(3, 0xfff8e1, 1);
+    g.strokeCircle(size / 2, size / 2, size / 2 - 3);
+
+    g.fillStyle(0xffb300, 1);
+    g.fillCircle(size / 2, size / 2, size / 2 - 7);
+
+    g.generateTexture(key, size, size);
+    g.destroy();
+  }
+
+  private createEagleTexture(key: string): void {
+    const w = 40;
+    const h = 26;
+    const g = this.add.graphics();
+
+    g.fillStyle(0x5d4037, 1);
+    g.fillRoundedRect(10, 10, 18, 10, 4);
+
+    g.fillStyle(0x3e2723, 1);
+    g.fillTriangle(8, 14, 2, 8, 4, 18);
+    g.fillTriangle(30, 14, 36, 8, 34, 18);
+
+    g.fillStyle(0xffcc80, 1);
+    g.fillRoundedRect(16, 6, 10, 8, 3);
+
+    g.fillStyle(0xffeb3b, 1);
+    g.fillTriangle(26, 10, 34, 12, 26, 14);
+
+    g.fillStyle(0x000000, 1);
+    g.fillCircle(20, 9, 1.2);
+
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  private createMushroomTexture(key: string): void {
+    const w = 30;
+    const h = 26;
+    const g = this.add.graphics();
+
+    g.fillStyle(0xd32f2f, 1);
+    g.fillRoundedRect(0, 0, w, 16, 8);
+
+    g.fillStyle(0xfff3e0, 1);
+    g.fillRect(10, 14, 10, 12);
+
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  private createScorpionTexture(key: string): void {
+    const w = 42;
+    const h = 30;
+    const g = this.add.graphics();
+
+    g.fillStyle(0x4e342e, 1);
+    g.fillRoundedRect(10, 14, 18, 10, 4);
+    g.fillRoundedRect(8, 10, 12, 8, 3);
+
+    g.fillRect(6, 16, 4, 6);
+    g.fillRect(12, 18, 4, 6);
+    g.fillRect(18, 18, 4, 6);
+
+    g.fillRect(26, 10, 4, 10);
+    g.fillRect(28, 6, 4, 8);
+    g.fillTriangle(28, 6, 38, 8, 30, 16);
+
+    g.fillRect(6, 8, 4, 4);
+    g.fillRect(6, 6, 6, 2);
+
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  private createDogTexture(key: string): void {
+    const w = 34;
+    const h = 24;
+    const g = this.add.graphics();
+
+    g.fillStyle(0x795548, 1);
+    g.fillRoundedRect(8, 10, 18, 10, 4);
+
+    g.fillRoundedRect(6, 4, 10, 8, 3);
+    g.fillTriangle(8, 6, 6, 2, 10, 4);
+    g.fillTriangle(14, 6, 18, 2, 16, 4);
+
+    g.fillStyle(0x3e2723, 1);
+    g.fillRect(10, 18, 3, 6);
+    g.fillRect(16, 18, 3, 6);
+    g.fillRect(22, 18, 3, 6);
+
+    g.fillStyle(0xffcc80, 1);
+    g.fillRoundedRect(9, 9, 6, 4, 2);
+
+    g.fillStyle(0x000000, 1);
+    g.fillCircle(10, 7, 1);
+    g.fillCircle(13, 7, 1);
+
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  private createDesertPalmTexture(key: string): void {
+    const w = 32;
+    const h = 80;
+    const g = this.add.graphics();
+
+    g.fillStyle(0x6d4c41, 1);
+    g.fillRoundedRect(14, 26, 6, 48, 3);
+
+    g.fillStyle(0x2e7d32, 1);
+    g.fillTriangle(16, 24, 4, 10, 10, 26);
+    g.fillTriangle(16, 24, 28, 10, 22, 26);
+    g.fillTriangle(16, 22, 6, 16, 12, 30);
+    g.fillTriangle(16, 22, 26, 16, 20, 30);
+
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  private createForestTreeTexture(key: string): void {
+    const w = 36;
+    const h = 80;
+    const g = this.add.graphics();
+
+    g.fillStyle(0x5d4037, 1);
+    g.fillRoundedRect(16, 30, 6, 40, 3);
+
+    g.fillStyle(0x388e3c, 1);
+    g.fillCircle(20, 26, 16);
+    g.fillCircle(12, 32, 12);
+    g.fillCircle(28, 32, 12);
+
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  private createCityBuildingTexture(key: string): void {
+    const w = 30;
+    const h = 80;
+    const g = this.add.graphics();
+
+    g.fillStyle(0x424242, 1);
+    g.fillRect(4, 8, 22, 68);
+
+    g.fillStyle(0x616161, 1);
+    g.fillRect(6, 10, 18, 4);
+    g.fillRect(6, 18, 18, 4);
+    g.fillRect(6, 26, 18, 4);
+    g.fillRect(6, 34, 18, 4);
+    g.fillRect(6, 42, 18, 4);
+    g.fillRect(6, 50, 18, 4);
+    g.fillRect(6, 58, 18, 4);
+
+    g.generateTexture(key, w, h);
+    g.destroy();
+  }
+
+  // -------------------------------------------------
+  // Tema visual según el mundo
+  // -------------------------------------------------
+  private applyWorldTheme(): void {
+    const idx = Phaser.Math.Clamp(this.worldIndex, 0, this.worldConfigs.length - 1);
+    const cfg = this.worldConfigs[idx];
+
+    this.cameras.main.setBackgroundColor(cfg.bgColor);
+    this.platformTextureKey = cfg.platformKey;
+    this.hazardTextureKey = cfg.hazardKey;
+
+    if (idx === 0) {
+      this.obstacleTextureKey = 'obstacleDesert';
+    } else if (idx === 1) {
+      this.obstacleTextureKey = 'obstacleForest';
+    } else {
+      this.obstacleTextureKey = 'obstacleCity';
+    }
+  }
+
+  // -------------------------------------------------
+  // HUD
+  // -------------------------------------------------
+  private createHUD(): void {
+    const style: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      color: '#ffffff',
+    };
+
+    this.livesText = this.add.text(16, 16, '', style).setScrollFactor(0);
+    this.coinsText = this.add.text(16, 40, '', style).setScrollFactor(0);
+    this.worldText = this.add.text(16, 64, '', style).setScrollFactor(0);
+    this.distanceText = this.add.text(16, 88, '', style).setScrollFactor(0);
+
+    this.updateHUDTexts();
+    this.updateDistanceHUD();
+  }
+
+  private updateHUDTexts(): void {
+    const idx = Phaser.Math.Clamp(this.worldIndex, 0, this.worldConfigs.length - 1);
+    const name = this.worldConfigs[idx].name;
+
+    this.livesText.setText(`Vidas: ${this.lives}`);
+    this.coinsText.setText(`Monedas: ${this.coinsCount} (cada 10 recupero 1 vida)`);
+    this.worldText.setText(`Mundo: ${name}`);
+  }
+
+  private updateDistanceHUD(): void {
+    if (!this.distanceText || !this.player) return;
+
+    const meters = Math.floor(this.player.x / this.pixelsPerMeter);
+    const total = this.levelMeters;
+    this.distanceText.setText(`Distancia: ${meters} m de ${total} m`);
+
+    if (meters > this.lastMeterReported) {
+      const delta = meters - this.lastMeterReported;
+      this.lastMeterReported = meters;
+      this.addDistanceToProfile(delta);
+    }
+  }
+
+  // -------------------------------------------------
+  // Creación del recorrido tipo escalera, con obstáculos
+  // -------------------------------------------------
+  private createRun(): void {
+    this.isRespawning = false;
+    this.isGameOver = false;
+    this.isInvulnerable = false;
+    this.lastMeterReported = 0;
+
+    if (this.invulnTween) {
+      this.invulnTween.stop();
+      this.invulnTween = undefined;
+    }
+
+    this.applyWorldTheme();
+
+    if (this.platforms) this.platforms.clear(true, true);
+    if (this.bugs) this.bugs.clear(true, true);
+    if (this.coins) this.coins.clear(true, true);
+    if (this.mushrooms) this.mushrooms.clear(true, true);
+    if (this.obstacles) this.obstacles.clear(true, true);
+    if (this.player) this.player.destroy();
+    if (this.portal) this.portal.destroy();
+    if (this.gameOverUI) {
+      this.gameOverUI.destroy();
+      this.gameOverUI = undefined;
+    }
+
+    this.platforms = this.physics.add.group({ allowGravity: false, immovable: true });
+    this.bugs = this.physics.add.group({ allowGravity: false, immovable: true });
+    this.coins = this.physics.add.group({ allowGravity: false });
+    this.mushrooms = this.physics.add.group({ allowGravity: false, immovable: true });
+    this.obstacles = this.physics.add.group({ allowGravity: false, immovable: true });
+
+    this.physics.world.setBounds(0, 0, this.levelWidth, 600);
+    this.cameras.main.setBounds(0, 0, this.levelWidth, 600);
+
+    const startPlatform = this.platforms.create(120, 520, this.platformTextureKey) as Phaser.Physics.Arcade.Sprite;
+    startPlatform.setScale(1.6, 1);
+    startPlatform.refreshBody();
+    startPlatform.setData('isStart', true);
+
+    this.lastSafeX = startPlatform.x;
+    this.lastSafeY = 480;
+
+    const pathPlatforms: Phaser.Physics.Arcade.Sprite[] = [];
+    pathPlatforms.push(startPlatform);
+
+    let prevCenterX = startPlatform.x;
+    let prevWidth = startPlatform.displayWidth;
+    let prevY = startPlatform.y;
+
+    const maxVerticalStepPx = 60;
+    const minEdgeGapPx = 100;
+    const maxEdgeGapPx = 150;
+
+    const avgStepPx = ((minEdgeGapPx + maxEdgeGapPx) / 2) + 150;
+    const steps = Math.max(1, Math.floor((this.levelWidth - 260 - prevCenterX) / avgStepPx));
+
+    for (let i = 0; i < steps; i++) {
+      const scaleX = Phaser.Math.FloatBetween(1.2, 2.0);
+      const newWidth = 120 * scaleX;
+
+      const gapBetweenEdges = Phaser.Math.Between(minEdgeGapPx, maxEdgeGapPx);
+      let newCenterX = prevCenterX + prevWidth / 2 + gapBetweenEdges + newWidth / 2;
+
+      if (newCenterX > this.levelWidth - 260) {
+        newCenterX = this.levelWidth - 260;
+      }
+
+      let deltaY = Phaser.Math.Between(-maxVerticalStepPx, maxVerticalStepPx);
+      let newY = prevY + deltaY;
+
+      newY = Phaser.Math.Clamp(newY, 260, 520);
+      if (Math.abs(newY - prevY) > maxVerticalStepPx) {
+        const sign = newY > prevY ? 1 : -1;
+        newY = prevY + sign * maxVerticalStepPx;
+      }
+
+      const p = this.platforms.create(newCenterX, newY, this.platformTextureKey) as Phaser.Physics.Arcade.Sprite;
+      p.setScale(scaleX, 1);
+      p.refreshBody();
+      p.setData('isStart', false);
+
+      pathPlatforms.push(p);
+      prevCenterX = newCenterX;
+      prevWidth = newWidth;
+      prevY = newY;
+    }
+
+    const lastPlatform = pathPlatforms[pathPlatforms.length - 1];
+
+    let portalX = Math.min(this.levelWidth - 120, lastPlatform.x + 140);
+    let portalY = lastPlatform.y - Phaser.Math.Between(10, 40);
+    portalY = Phaser.Math.Clamp(portalY, lastPlatform.y - maxVerticalStepPx, lastPlatform.y + maxVerticalStepPx);
+    portalY = Phaser.Math.Clamp(portalY, 140, 520);
+
+    this.portal = this.physics.add.sprite(portalX, portalY, 'portal');
+    const portalBody = this.portal.body as Phaser.Physics.Arcade.Body | null;
+    if (portalBody) {
+      portalBody.setAllowGravity(false);
+      portalBody.setImmovable(true);
+    }
+    this.portal.setVisible(true);
+    this.portalTargetX = this.portal.x;
+
+    // Monedas sobre el camino
+    pathPlatforms.forEach(p => {
+      if (!p.getData('isStart') && Phaser.Math.Between(0, 1) === 1) {
+        const coin = this.coins.create(p.x, p.y - 30, 'coin') as Phaser.Physics.Arcade.Sprite;
+        coin.setData('collected', false);
+      }
+    });
+
+    // Peligros móviles sobre plataformas grandes
+    pathPlatforms.forEach(p => {
+      if (p.displayWidth >= 140 && Phaser.Math.Between(0, 100) < 40) {
+        const half = p.displayWidth / 2;
+        const left = p.x - half;
+        const right = p.x + half;
+
+        const hazard = this.mushrooms.create(p.x, p.y - 20, this.hazardTextureKey) as Phaser.Physics.Arcade.Sprite;
+
+        const baseSpeed = Phaser.Math.Between(40, 70);
+        const slowSpeed = baseSpeed * 0.3;
+        const dir = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
+
+        hazard.setData('left', left + 8);
+        hazard.setData('right', right - 8);
+        hazard.setData('speed', dir * slowSpeed);
+      }
+    });
+
+    // Obstáculos altos (palmeras, árboles, edificios) en cada mundo
+    pathPlatforms.forEach(p => {
+      if (p.getData('isStart')) return;
+
+      if (Phaser.Math.Between(0, 100) < 35) {
+        const numBlocks = Phaser.Math.Between(1, 2);
+        for (let i = 0; i < numBlocks; i++) {
+          const offset = Phaser.Math.Between(-30, 30);
+          const block = this.obstacles.create(p.x + offset, 0, this.obstacleTextureKey) as Phaser.Physics.Arcade.Sprite;
+
+          const h = block.displayHeight;
+          const blockY = p.y - 18 - h / 2;
+          block.setY(blockY);
+          block.refreshBody();
+        }
+      }
+    });
+
+    // Águilas voladoras
+    const numBugs = 120;
+    for (let i = 0; i < numBugs; i++) {
+      const bx = Phaser.Math.Between(150, this.levelWidth - 150);
+      const by = Phaser.Math.Between(100, 560);
+      const bug = this.bugs.create(bx, by, 'flyingBug') as Phaser.Physics.Arcade.Sprite;
+
+      const dirX = Phaser.Math.Between(0, 1) === 0 ? -1 : 1;
+      const speedX = Phaser.Math.Between(40, 100);
+      const speedY = Phaser.Math.Between(30, 70) * (Phaser.Math.Between(0, 1) === 0 ? -1 : 1);
+
+      const yMin = Math.max(60, by - Phaser.Math.Between(40, 120));
+      const yMax = Math.min(560, by + Phaser.Math.Between(40, 120));
+
+      bug.setData('vx', dirX * speedX);
+      bug.setData('vy', speedY);
+      bug.setData('yMin', yMin);
+      bug.setData('yMax', yMax);
+    }
+
+    // Jugador
+    this.player = this.physics.add.sprite(this.lastSafeX, this.lastSafeY, this.selectedAvatarKey);
+    this.player.setBounce(0.1);
+    this.player.setCollideWorldBounds(false);
+    this.player.setAlpha(1);
+
+    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+    this.cameras.main.setDeadzone(200, 200);
+
+    // Colisiones
+    this.physics.add.collider(this.player, this.platforms, () => {
+      const body = this.player.body as Phaser.Physics.Arcade.Body;
+      if (body.blocked.down || body.touching.down) {
+        this.lastSafeX = this.player.x;
+        this.lastSafeY = this.player.y;
+      }
+    });
+
+    this.physics.add.collider(this.player, this.obstacles);
+
+    this.physics.add.overlap(
+      this.player,
+      this.coins,
+      (_player, coin) => this.handleCollectCoin(coin as Phaser.Physics.Arcade.Sprite),
+      undefined,
+      this,
+    );
+
+    this.physics.add.overlap(
+      this.player,
+      this.bugs,
+      () => this.handleHitBug(),
+      undefined,
+      this,
+    );
+
+    this.physics.add.overlap(
+      this.player,
+      this.mushrooms,
+      () => this.handleHitMushroom(),
+      undefined,
+      this,
+    );
+
+    this.physics.add.overlap(
+      this.player,
+      this.portal,
+      () => this.handleReachPortal(),
+      undefined,
+      this,
+    );
+
+    this.updateHUDTexts();
+    this.updateDistanceHUD();
+  }
+
+  // -------------------------------------------------
+  // Controles (teclado + móvil)
+  // -------------------------------------------------
+  private handleControls(): void {
+    if (!this.player || !this.cursors || this.isRespawning) {
+      return;
+    }
+
+    // Aquí combino el teclado con los controles táctiles
+    const movingLeft = (this.cursors.left?.isDown ?? false) || this.mobileLeft;
+    const movingRight = (this.cursors.right?.isDown ?? false) || this.mobileRight;
+
+    if (movingLeft && !movingRight) {
+      this.player.setVelocityX(-220);
+    } else if (movingRight && !movingLeft) {
+      this.player.setVelocityX(220);
+    } else {
+      this.player.setVelocityX(0);
+    }
+
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    const grounded = body.blocked.down || body.touching.down;
+
+    const wantsJump = (this.cursors.up?.isDown ?? false) || this.mobileJump;
+
+    if (wantsJump && grounded) {
+      this.player.setVelocityY(-450);
+      // Aquí limpio la bandera de salto móvil para que no se quede pegado saltando
+      this.mobileJump = false;
+    }
+
+    if (grounded) {
+      this.lastSafeX = this.player.x;
+      this.lastSafeY = this.player.y;
+    }
+  }
+
+  // -------------------------------------------------
+  // Águilas
+  // -------------------------------------------------
+  private updateBugs(): void {
+    const dt = 1 / 60;
+
+    this.bugs.getChildren().forEach((b: Phaser.GameObjects.GameObject) => {
+      const bug = b as Phaser.Physics.Arcade.Sprite;
+
+      let vx = bug.getData('vx') || 0;
+      let vy = bug.getData('vy') || 0;
+      const yMin = bug.getData('yMin') ?? 80;
+      const yMax = bug.getData('yMax') ?? 520;
+
+      bug.x += vx * dt;
+      bug.y += vy * dt;
+
+      if (bug.x < 80 || bug.x > this.levelWidth - 80) {
+        vx = -vx;
+        bug.setData('vx', vx);
+      }
+
+      if (bug.y < yMin || bug.y > yMax) {
+        vy = -vy;
+        bug.setData('vy', vy);
+      }
+
+      const body = bug.body as Phaser.Physics.Arcade.Body;
+      body.updateFromGameObject();
+    });
+  }
+
+  // -------------------------------------------------
+  // Peligros sobre plataformas
+  // -------------------------------------------------
+  private updateMushrooms(): void {
+    if (!this.mushrooms) return;
+
+    const dt = 1 / 60;
+
+    this.mushrooms.getChildren().forEach((m: Phaser.GameObjects.GameObject) => {
+      const mush = m as Phaser.Physics.Arcade.Sprite;
+      let speed = mush.getData('speed') || 0;
+      const left = mush.getData('left') ?? mush.x - 40;
+      const right = mush.getData('right') ?? mush.x + 40;
+
+      mush.x += speed * dt;
+
+      if (mush.x < left || mush.x > right) {
+        speed = -speed;
+        mush.setData('speed', speed);
+      }
+
+      const body = mush.body as Phaser.Physics.Arcade.Body;
+      body.updateFromGameObject();
+    });
+  }
+
+  // -------------------------------------------------
+  // Caída fuera del escenario
+  // -------------------------------------------------
+  private checkFall(): void {
+    if (this.player.y > 650 && !this.isRespawning && !this.isGameOver && !this.isInvulnerable) {
+      this.loseLife();
+    }
+  }
+
+  // -------------------------------------------------
+  // Monedas
+  // -------------------------------------------------
+  private handleCollectCoin(coin: Phaser.Physics.Arcade.Sprite): void {
+    if (coin.getData('collected')) return;
+
+    coin.setData('collected', true);
+    coin.disableBody(true, true);
+
+    this.coinsCount += 1;
+
+    if (this.coinsCount % 10 === 0 && this.lives < 5) {
+      this.lives += 1;
+    }
+
+    this.updateHUDTexts();
+  }
+
+  // -------------------------------------------------
+  // Golpes
+  // -------------------------------------------------
+  private handleHitBug(): void {
+    if (this.isRespawning || this.isGameOver || this.isInvulnerable) return;
+    this.loseLife();
+  }
+
+  private handleHitMushroom(): void {
+    if (this.isRespawning || this.isGameOver || this.isInvulnerable) return;
+
+    this.coinsCount = Math.floor(this.coinsCount * 0.5);
+    this.updateHUDTexts();
+
+    this.loseLife();
+  }
+
+  // -------------------------------------------------
+  // Vidas / respawn
+  // -------------------------------------------------
+  private loseLife(): void {
+    if (this.isRespawning || this.isGameOver) return;
+
+    const willHaveLives = this.lives - 1 > 0;
+
+    this.lives -= 1;
+    this.updateHUDTexts();
+
+    if (!willHaveLives) {
+      this.isGameOver = true;
+      this.isRespawning = false;
+      this.isInvulnerable = false;
+
+      if (this.invulnTween) {
+        this.invulnTween.stop();
+        this.invulnTween = undefined;
+      }
+      if (this.player) {
+        this.player.setAlpha(1);
+      }
+
+      this.finalizeRunStats();
+      this.showGameOver();
+      return;
+    }
+
+    this.isRespawning = true;
+    this.isInvulnerable = true;
+
+    this.showMessage('Perdí una vida');
+    this.respawnPlayer();
+  }
+
+  private respawnPlayer(): void {
+    this.player.setVelocity(0, 0);
+    this.player.setX(this.lastSafeX);
+    this.player.setY(this.lastSafeY - 10);
+
+    if (this.invulnTween) {
+      this.invulnTween.stop();
+      this.invulnTween = undefined;
+    }
+
+    this.player.setAlpha(0.5);
+    this.invulnTween = this.tweens.add({
+      targets: this.player,
+      alpha: { from: 0.3, to: 1 },
+      duration: 250,
+      yoyo: true,
+      repeat: -1,
+    });
+
+    this.time.delayedCall(800, () => {
+      this.isRespawning = false;
+    });
+
+    this.time.delayedCall(5000, () => {
+      this.isInvulnerable = false;
+      if (this.invulnTween) {
+        this.invulnTween.stop();
+        this.invulnTween = undefined;
+      }
+      this.player.setAlpha(1);
+    });
+  }
+
+  // -------------------------------------------------
+  // Llegar a la puerta final
+  // -------------------------------------------------
+  private handleReachPortal(): void {
+    if (this.isGameOver) return;
+
+    this.isGameOver = true;
+
+    this.showMessage('He llegado al final del recorrido');
+    this.finalizeRunStats();
+
+    this.time.delayedCall(1500, () => {
+      this.showWinScreen();
+    });
+  }
+
+  // -------------------------------------------------
+  // Mensajes / pantallas fin
+  // -------------------------------------------------
+  private showMessage(text: string): void {
+    const msg = this.add.text(400, 300, text, {
+      fontFamily: 'Arial',
+      fontSize: '24px',
+      color: '#ffffff',
+      backgroundColor: '#000000',
+    }).setOrigin(0.5);
+
+    msg.setScrollFactor(0);
+
+    this.time.delayedCall(1200, () => {
+      msg.destroy();
+    });
+  }
+
+  private showGameOver(): void {
+    if (this.gameOverUI) {
+      this.gameOverUI.destroy();
+    }
+
+    const bg = this.add.rectangle(400, 300, 320, 180, 0x000000, 0.8);
+    const title = this.add.text(400, 250, 'Game Over', {
+      fontFamily: 'Arial',
+      fontSize: '28px',
+      color: '#ffffff',
+    }).setOrigin(0.5);
+
+    const btnStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      color: '#ffffff',
+      backgroundColor: '#1e88e5',
+      padding: { x: 8, y: 4 },
+    };
+
+    const btnRestart = this.add.text(400, 300, 'Reiniciar recorrido', btnStyle).setOrigin(0.5);
+    const btnMenu = this.add.text(400, 340, 'Menú', btnStyle).setOrigin(0.5);
+
+    bg.setScrollFactor(0);
+    title.setScrollFactor(0);
+    btnRestart.setScrollFactor(0);
+    btnMenu.setScrollFactor(0);
+
+    btnRestart.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+      this.restartRun();
+    });
+
+    btnMenu.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+      window.dispatchEvent(new Event('cat-game-menu'));
+    });
+
+    this.gameOverUI = this.add.container(0, 0, [bg, title, btnRestart, btnMenu]);
+  }
+
+  private showWinScreen(): void {
+    if (this.gameOverUI) {
+      this.gameOverUI.destroy();
+    }
+
+    const bg = this.add.rectangle(400, 300, 360, 200, 0x000000, 0.85);
+    const title = this.add.text(400, 250, 'Recorrido completado', {
+      fontFamily: 'Arial',
+      fontSize: '26px',
+      color: '#ffffff',
+    }).setOrigin(0.5);
+
+    const subtitle = this.add.text(400, 280, 'He corrido 6 km con mi gato.', {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      color: '#ffffff',
+    }).setOrigin(0.5);
+
+    const btnStyle: Phaser.Types.GameObjects.Text.TextStyle = {
+      fontFamily: 'Arial',
+      fontSize: '18px',
+      color: '#ffffff',
+      backgroundColor: '#1e88e5',
+      padding: { x: 8, y: 4 },
+    };
+
+    const btnRestart = this.add.text(400, 320, 'Volver a empezar', btnStyle).setOrigin(0.5);
+    const btnMenu = this.add.text(400, 360, 'Menú', btnStyle).setOrigin(0.5);
+
+    bg.setScrollFactor(0);
+    title.setScrollFactor(0);
+    subtitle.setScrollFactor(0);
+    btnRestart.setScrollFactor(0);
+    btnMenu.setScrollFactor(0);
+
+    btnRestart.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+      this.restartRun();
+    });
+
+    btnMenu.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+      window.dispatchEvent(new Event('cat-game-menu'));
+    });
+
+    this.gameOverUI = this.add.container(0, 0, [bg, title, subtitle, btnRestart, btnMenu]);
+  }
+
+  // -------------------------------------------------
+  // Reinicio completo
+  // -------------------------------------------------
+  private restartRun(): void {
+    this.isGameOver = false;
+    this.isRespawning = false;
+    this.isInvulnerable = false;
+    this.lives = 3;
+    this.coinsCount = 0;
+    this.lastMeterReported = 0;
+
+    if (this.invulnTween) {
+      this.invulnTween.stop();
+      this.invulnTween = undefined;
+    }
+
+    if (this.gameOverUI) {
+      this.gameOverUI.destroy();
+      this.gameOverUI = undefined;
+    }
+
+    this.updateHUDTexts();
+    this.createRun();
+  }
+
+  public restartFromUI(): void {
+    this.restartRun();
+  }
+
+  // -------------------------------------------------
+  // Estadísticas globales del jugador
+  // -------------------------------------------------
+  private loadPlayerStats(): {
+    level: number;
+    totalDistance: number;
+    totalCoins: number;
+    runs: number;
+  } {
+    const key = 'runnerStats';
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          level: parsed.level ?? 1,
+          totalDistance: parsed.totalDistance ?? 0,
+          totalCoins: parsed.totalCoins ?? 0,
+          runs: parsed.runs ?? 0,
+        };
+      }
+    } catch {}
+
+    return {
+      level: 1,
+      totalDistance: 0,
+      totalCoins: 0,
+      runs: 0,
+    };
+  }
+
+  private savePlayerStats(stats: {
+    level: number;
+    totalDistance: number;
+    totalCoins: number;
+    runs: number;
+  }): void {
+    try {
+      window.localStorage.setItem('runnerStats', JSON.stringify(stats));
+    } catch {}
+  }
+
+  private addDistanceToProfile(deltaMeters: number): void {
+    if (deltaMeters <= 0) return;
+
+    const stats = this.loadPlayerStats();
+    stats.totalDistance += deltaMeters;
+
+    const newLevel = 1 + Math.floor(stats.totalDistance / 300);
+    if (newLevel > stats.level) {
+      stats.level = newLevel;
+    }
+
+    this.savePlayerStats(stats);
+  }
+
+  private finalizeRunStats(): void {
+    const stats = this.loadPlayerStats();
+    stats.runs += 1;
+    stats.totalCoins += this.coinsCount;
+    this.savePlayerStats(stats);
+  }
+}

@@ -1,0 +1,29 @@
+<ion-content class="pause-bg" fullscreen>
+  <div class="pause-wrapper">
+    <div class="pause-card">
+      <div class="title">Juego en pausa</div>
+
+      <div class="summary">
+        <div>Mundo: <strong>{{ world }}</strong></div>
+        <div>Distancia: <strong>{{ distance }} m</strong></div>
+        <div>Monedas: <strong>{{ coins }}</strong></div>
+        <div>Puntuación: <strong>{{ score }}</strong></div>
+        <div *ngIf="completed" class="completed">
+          ¡Nivel completado!
+        </div>
+      </div>
+
+      <ion-button expand="block" class="btn-main" (click)="resume()">
+        Reanudar
+      </ion-button>
+
+      <ion-button expand="block" class="btn-secondary" (click)="restart()">
+        Reiniciar desde inicio
+      </ion-button>
+
+      <ion-button expand="block" fill="outline" class="btn-menu" (click)="backToMenu()">
+        Menú principal
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

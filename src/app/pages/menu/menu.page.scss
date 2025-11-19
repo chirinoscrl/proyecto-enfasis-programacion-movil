@@ -1,0 +1,143 @@
+/* src/app/pages/menu/menu.page.scss */
+
+.menu-bg {
+  --background: linear-gradient(135deg, #3d00ff, #6200ff);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menu-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.menu-card {
+  background: #0a0a12;
+  width: 380px;
+  border-radius: 25px;
+  padding: 25px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.45);
+}
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.menu-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffda3d;
+}
+
+.menu-subtitle {
+  font-size: 14px;
+  color: #5ecbff;
+  margin-top: -5px;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  margin-top: 25px;
+}
+
+.avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 3px solid #444;
+  object-fit: cover;
+}
+
+.profile-info {
+  margin-left: 15px;
+}
+
+.player-name {
+  font-size: 20px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.player-level {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.main-btn {
+  width: 100%;
+  margin-top: 25px;
+  height: 50px;
+  border-radius: 12px;
+  background: #00c860;
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+}
+
+.secondary-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.secondary-btn {
+  width: 48%;
+  height: 45px;
+  border-radius: 10px;
+  border: 1px solid #444;
+  background: #151520;
+  color: #e0e0e0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stats-section {
+  margin-top: 30px;
+}
+
+.stats-title {
+  color: #fff;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.stats-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.stats-item {
+  text-align: center;
+  width: 33%;
+}
+
+.stats-label {
+  font-size: 12px;
+  color: #ccc;
+}
+
+.stats-value {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Contenedor del botón salir abajo */
+.logout-wrapper {
+  margin-top: 20px;
+}
+
+/* Botón salir a ancho completo y resaltado en rojo */
+.logout-full {
+  width: 100%;
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}

@@ -1,0 +1,63 @@
+.splash-bg {
+  --background: linear-gradient(180deg, #5a29c8, #3b1fa8);
+}
+
+.splash-frame {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  color: #fff;
+}
+
+.splash-card {
+  width: 100%;
+  max-width: 420px;
+  background: #080515;
+  border-radius: 32px;
+  padding: 32px 16px;
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.55);
+}
+
+.splash-title {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.runner-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffd54f;
+}
+
+.multimundos-title {
+  font-size: 20px;
+  color: #29b6f6;
+}
+
+.splash-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-square {
+  width: 96px;
+  height: 96px;
+  border-radius: 24px;
+  border: 6px solid #fff;
+  box-sizing: border-box;
+}
+
+.logo-text {
+  font-size: 18px;
+}
+
+.splash-footer {
+  margin-top: 16px;
+  font-size: 12px;
+  opacity: 0.8;
+}

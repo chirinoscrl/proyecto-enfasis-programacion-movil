@@ -1,0 +1,81 @@
+/* src/app/pages/game-over/game-over.page.scss */
+ion-content {
+  --background: radial-gradient(circle at top, #5a2cff 0, #2b0c6b 55%, #19073e 100%);
+}
+
+.go-wrapper {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 0 16px;
+}
+
+.go-card {
+  background: #050316;
+  color: #ffffff;
+  border-radius: 40px;
+  padding: 32px 32px 26px;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.95);
+  text-align: center;
+}
+
+.go-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.go-subtitle {
+  font-size: 16px;
+  opacity: 0.8;
+  margin-bottom: 24px;
+}
+
+.go-stats {
+  border-radius: 16px;
+  background: #08061b;
+  padding: 18px 24px;
+  margin-bottom: 26px;
+}
+
+.go-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.go-row:last-child {
+  margin-bottom: 0;
+}
+
+.go-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.go-btn {
+  border-radius: 999px;
+  padding: 10px 26px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.go-btn.primary {
+  background: linear-gradient(135deg, #00e5ff, #0091ff);
+  color: #001624;
+}
+
+.go-btn.secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+}
+
+.go-btn.tertiary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}

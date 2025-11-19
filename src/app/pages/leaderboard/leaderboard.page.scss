@@ -1,0 +1,96 @@
+/* src/app/pages/leaderboard/leaderboard.page.scss */
+ion-content {
+  --background: radial-gradient(circle at top, #5a2cff 0, #2b0c6b 55%, #19073e 100%);
+}
+
+.lb-wrapper {
+  max-width: 1000px;
+  margin: 60px auto;
+  padding: 0 16px;
+}
+
+.lb-card {
+  background: #050316;
+  color: #ffffff;
+  border-radius: 40px;
+  padding: 24px 24px 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.95);
+}
+
+.lb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.lb-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.lb-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.lb-tab {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  padding-bottom: 4px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.lb-tab--active {
+  color: #ffffff;
+  border-bottom-color: #00e5ff;
+}
+
+.lb-body {
+  max-height: 360px;
+  overflow: auto;
+  margin-bottom: 16px;
+}
+
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.lb-table th,
+.lb-table td {
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.lb-table thead {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lb-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.lb-empty {
+  text-align: center;
+  padding: 18px 0 10px;
+  opacity: 0.8;
+}
+
+.lb-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.lb-btn {
+  border-radius: 999px;
+  padding: 10px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+}

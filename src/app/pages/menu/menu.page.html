@@ -1,0 +1,78 @@
+<!-- src/app/pages/menu/menu.page.html -->
+<ion-content fullscreen class="menu-bg">
+
+  <div class="menu-wrapper">
+    <div class="menu-card">
+
+      <!-- Encabezado: solo título -->
+      <div class="menu-header">
+        <div class="menu-title-block">
+          <div class="menu-title">RUNNER</div>
+          <div class="menu-subtitle">MULTIMUNDOS</div>
+        </div>
+      </div>
+
+      <!-- Sección de perfil -->
+      <div class="profile-section">
+
+        <!-- Avatar: si falla la imagen llamo a onAvatarError -->
+        <img
+          class="avatar"
+          [src]="avatarSrc"
+          (error)="onAvatarError()"
+          alt="Avatar del jugador"
+        />
+
+        <div class="profile-info">
+          <div class="player-name">{{ playerName }}</div>
+          <div class="player-level">Nivel {{ level }}</div>
+        </div>
+
+      </div>
+
+      <!-- Botón principal -->
+      <button class="main-btn" (click)="goToWorldSelect()">
+        JUGAR
+      </button>
+
+      <!-- Botones secundarios -->
+      <div class="secondary-actions">
+        <button class="secondary-btn" (click)="goToAvatar()">AVATAR</button>
+        <button class="secondary-btn" (click)="goToLeaderboard()">TABLAS</button>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="stats-section">
+        <div class="stats-title">Resumen</div>
+
+        <div class="stats-grid">
+
+          <div class="stats-item">
+            <div class="stats-label">Partidas</div>
+            <div class="stats-value">{{ totalRuns }}</div>
+          </div>
+
+          <div class="stats-item">
+            <div class="stats-label">Distancia</div>
+            <div class="stats-value">{{ totalDistance }} m</div>
+          </div>
+
+          <div class="stats-item">
+            <div class="stats-label">Monedas</div>
+            <div class="stats-value">{{ totalCoins }}</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Botón SALIR abajo con mismo estilo base -->
+      <div class="logout-wrapper">
+        <button class="secondary-btn logout-full" (click)="logout()">
+          SALIR
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</ion-content>

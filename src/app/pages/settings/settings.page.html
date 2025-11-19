@@ -1,0 +1,59 @@
+<ion-content class="settings-bg" fullscreen>
+  <div class="settings-wrapper">
+    <div class="settings-card">
+      <div class="title">Ajustes</div>
+
+      <div class="section">
+        <div class="section-title">Estadísticas</div>
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="label">Puntos</div>
+            <div class="value">{{ stats?.totalScore || 0 }}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Monedas</div>
+            <div class="value">{{ stats?.totalCoins || 0 }}</div>
+          </div>
+          <div class="stat">
+            <div class="label">Distancia</div>
+            <div class="value">{{ stats?.totalDistance || 0 }} m</div>
+          </div>
+          <div class="stat">
+            <div class="label">Nivel</div>
+            <div class="value">{{ stats?.currentLevel || 1 }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Audio</div>
+        <ion-item lines="none" class="audio-item">
+          <ion-label>Música</ion-label>
+          <ion-toggle [(ngModel)]="musicEnabled"></ion-toggle>
+        </ion-item>
+        <ion-item lines="none" class="audio-item">
+          <ion-label>Efectos</ion-label>
+          <ion-toggle [(ngModel)]="effectsEnabled"></ion-toggle>
+        </ion-item>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Reiniciar</div>
+        <ion-button
+          expand="block"
+          class="btn-reset"
+          (click)="resetStats()">
+          Reiniciar estadísticas y ranking
+        </ion-button>
+      </div>
+
+      <ion-button
+        expand="block"
+        fill="outline"
+        class="btn-back"
+        (click)="backToMenu()">
+        Volver al menú principal
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

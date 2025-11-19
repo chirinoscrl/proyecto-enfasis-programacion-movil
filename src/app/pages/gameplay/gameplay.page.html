@@ -1,0 +1,70 @@
+<!-- src/app/pages/gameplay/gameplay.page.html -->
+
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Cat Platformer</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen>
+  <!-- Aquí va el canvas del juego -->
+  <div class="game-wrapper">
+    <div id="game-container"></div>
+  </div>
+
+  <!-- Contenedor fijo en la parte inferior con dos filas:
+       1) Controles
+       2) Botones azules -->
+  <div class="bottom-wrapper">
+    <!-- Fila de controles (flechas izquierda/derecha + salto) -->
+    <div class="controls-row">
+      <div class="controls-left">
+        <button
+          class="control-btn"
+          (touchstart)="onLeftDown()"
+          (touchend)="onLeftUp()"
+          (mousedown)="onLeftDown()"
+          (mouseup)="onLeftUp()"
+          (mouseleave)="onLeftUp()"
+        >
+          ◀
+        </button>
+
+        <button
+          class="control-btn"
+          (touchstart)="onRightDown()"
+          (touchend)="onRightUp()"
+          (mousedown)="onRightDown()"
+          (mouseup)="onRightUp()"
+          (mouseleave)="onRightUp()"
+        >
+          ▶
+        </button>
+      </div>
+
+      <div class="controls-right">
+        <button
+          class="control-btn jump-btn"
+          (touchstart)="onJumpDown()"
+          (touchend)="onJumpUp()"
+          (mousedown)="onJumpDown()"
+          (mouseup)="onJumpUp()"
+          (mouseleave)="onJumpUp()"
+        >
+          ⬆
+        </button>
+      </div>
+    </div>
+
+    <!-- Fila de botones azules (Reiniciar / Menú) -->
+    <div class="buttons-row">
+      <button class="ui-button" (click)="restartLevel()">
+        Reiniciar nivel
+      </button>
+
+      <button class="ui-button" (click)="goToMenu()">
+        Volver al menú
+      </button>
+    </div>
+  </div>
+</ion-content>

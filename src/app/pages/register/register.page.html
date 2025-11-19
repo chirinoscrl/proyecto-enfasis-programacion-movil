@@ -1,0 +1,77 @@
+<ion-content class="register-bg" fullscreen>
+  <div class="register-container">
+    <div class="card">
+      <div class="title-area">
+        <h1 class="app-title-top">CREA TU CUENTA</h1>
+        <p class="subtitle">
+          Guarda tu progreso, desbloquea niveles y compite con tus amigos.
+        </p>
+      </div>
+
+      <form (ngSubmit)="onRegister()" class="form">
+        <label class="field-label">Nombre de jugador</label>
+        <ion-input
+          [(ngModel)]="name"
+          name="name"
+          required
+          fill="outline">
+        </ion-input>
+
+        <label class="field-label">Correo</label>
+        <ion-input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          fill="outline">
+        </ion-input>
+
+        <label class="field-label">Contraseña</label>
+        <ion-input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          fill="outline">
+        </ion-input>
+
+        <label class="field-label">Confirmar contraseña</label>
+        <ion-input
+          type="password"
+          [(ngModel)]="confirmPassword"
+          name="confirmPassword"
+          required
+          fill="outline">
+        </ion-input>
+
+        <div *ngIf="errorMessage" class="error">
+          {{ errorMessage }}
+        </div>
+
+        <ion-button
+          expand="block"
+          type="submit"
+          class="btn-main">
+          Crear cuenta
+        </ion-button>
+
+        <div class="or">o</div>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          class="btn-guest"
+          (click)="onGuest()">
+          Jugar como invitado
+        </ion-button>
+
+        <div class="login-link">
+          ¿Ya tienes cuenta?
+          <button type="button" (click)="goToLogin()">
+            Iniciar sesión
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</ion-content>

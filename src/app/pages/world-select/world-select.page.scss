@@ -1,0 +1,72 @@
+/* src/app/pages/world-select/world-select.page.scss */
+ion-content {
+  --background: radial-gradient(circle at top, #5a2cff 0, #2b0c6b 55%, #19073e 100%);
+}
+
+.world-wrapper {
+  max-width: 1100px;
+  margin: 40px auto 0;
+  padding: 24px;
+  text-align: center;
+}
+
+.world-title {
+  color: #ffffff;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 32px;
+}
+
+.world-list {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.world-card {
+  background: #050316;
+  color: #ffffff;
+  border-radius: 40px;
+  padding: 24px 32px;
+  min-width: 260px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.world-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.75);
+  background: #090828;
+}
+
+.world-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.world-description {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.world-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.world-back-btn {
+  padding: 12px 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 240, 255, 0.7);
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(0, 150, 255, 0.3));
+  color: #e5f5ff;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+}

@@ -1,0 +1,91 @@
+/* src/app/pages/avatar/avatar.page.scss */
+/* En este archivo doy estilo a la pantalla de selección de avatar. */
+
+.avatar-bg {
+  --background: radial-gradient(circle at top left, #4c2bff, #0a0420);
+}
+
+.avatar-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.avatar-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 32px;
+}
+
+.avatar-grid {
+  /* Aquí organizo las tarjetas de gatos en fila y con espacio entre ellas. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.avatar-card {
+  /* Aquí defino el estilo de cada tarjeta de gato. */
+  width: 180px;
+  padding: 20px 16px;
+  border-radius: 24px;
+  background: #050514;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease,
+    border-color 0.15s ease;
+  border: 2px solid transparent;
+}
+
+.avatar-card--selected {
+  /* Aquí remarco la tarjeta seleccionada. */
+  border-color: #00e9ff;
+  box-shadow: 0 0 18px rgba(0, 233, 255, 0.7);
+  transform: translateY(-4px);
+}
+
+.avatar-image {
+  /* Aquí muestro la imagen del gato en forma circular. */
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 12px;
+}
+
+.avatar-name {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.avatar-actions {
+  /* Aquí coloco los botones de guardar y volver. */
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.avatar-btn {
+  min-width: 150px;
+  padding: 12px 24px;
+  border-radius: 24px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.avatar-btn.primary {
+  background: #ffc72e;
+  color: #000;
+}
+
+.avatar-btn.secondary {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid #7b5bff;
+}

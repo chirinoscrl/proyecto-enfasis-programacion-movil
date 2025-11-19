@@ -1,0 +1,31 @@
+<!-- src/app/pages/gameplay/gameplay.page.html -->
+<!-- Aquí defino el encabezado con el título del juego -->
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Cat Platformer</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<!-- Aquí organizo el contenido principal: juego arriba, botones abajo -->
+<ion-content fullscreen>
+
+  <!-- Aquí centro el canvas de Phaser en la pantalla -->
+  <div class="game-wrapper">
+    <!-- Aquí es donde Phaser inyecta el lienzo del juego -->
+    <div id="game-container"></div>
+  </div>
+
+  <!-- Aquí pongo los botones de control debajo del juego -->
+  <div class="buttons-wrapper">
+    <!-- Aquí permito reiniciar el recorrido desde cero -->
+    <button class="ui-button" (click)="restartLevel()">
+      Reiniciar nivel
+    </button>
+
+    <!-- Aquí vuelvo al menú principal -->
+    <button class="ui-button" (click)="goToMenu()">
+      Volver al menú
+    </button>
+  </div>
+
+</ion-content>

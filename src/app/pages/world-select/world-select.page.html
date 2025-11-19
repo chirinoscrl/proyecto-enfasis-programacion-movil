@@ -1,0 +1,23 @@
+<!-- src/app/pages/world-select/world-select.page.html -->
+<ion-content fullscreen>
+  <div class="world-wrapper">
+    <h1 class="world-title">Elige un mundo</h1>
+
+    <div class="world-list">
+      <button
+        class="world-card"
+        *ngFor="let world of worlds"
+        (click)="selectWorld(world.id)"
+      >
+        <div class="world-name">{{ world.name }}</div>
+        <div class="world-description">{{ world.description }}</div>
+      </button>
+    </div>
+
+    <div class="world-actions">
+      <button class="world-back-btn" (click)="goBackToMenu()">
+        VOLVER AL MENÚ
+      </button>
+    </div>
+  </div>
+</ion-content>

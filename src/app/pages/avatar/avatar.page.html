@@ -1,0 +1,33 @@
+<!-- src/app/pages/avatar/avatar.page.html -->
+<!-- En este archivo defino la interfaz de selección de avatar. -->
+
+<ion-content fullscreen class="avatar-bg">
+  <div class="avatar-wrapper">
+    <h1 class="avatar-title">Elige tu avatar</h1>
+
+    <div class="avatar-grid">
+      <!-- Aquí recorro las opciones de avatar y dibujo una tarjeta por cada una. -->
+      <div
+        class="avatar-card"
+        *ngFor="let a of avatars"
+        [class.avatar-card--selected]="a.id === selectedId"
+        (click)="selectAvatar(a.id)"
+      >
+        <img class="avatar-image" [src]="a.src" [alt]="a.name" />
+
+        <div class="avatar-name">
+          {{ a.name }}
+        </div>
+      </div>
+    </div>
+
+    <div class="avatar-actions">
+      <button class="avatar-btn primary" (click)="saveAvatar()">
+        GUARDAR
+      </button>
+      <button class="avatar-btn secondary" (click)="goBack()">
+        VOLVER
+      </button>
+    </div>
+  </div>
+</ion-content>

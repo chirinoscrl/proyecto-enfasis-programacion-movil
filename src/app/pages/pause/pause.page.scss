@@ -1,0 +1,59 @@
+.pause-bg {
+  --background: linear-gradient(145deg, #5b2dd5, #7b3ff0);
+}
+
+.pause-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100%;
+}
+
+.pause-card {
+  width: min(640px, 96vw);
+  background: #080416;
+  border-radius: 32px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+  padding: 24px 24px 22px;
+  color: #ffffff;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.summary {
+  font-size: 14px;
+  margin-bottom: 16px;
+
+  div {
+    margin-bottom: 4px;
+  }
+}
+
+.completed {
+  margin-top: 6px;
+  color: #00c853;
+  font-weight: 600;
+}
+
+.btn-main {
+  --background: #00c853;
+  --border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.btn-secondary {
+  --background: #ffca28;
+  --border-radius: 999px;
+  color: #000;
+  margin-bottom: 8px;
+}
+
+.btn-menu {
+  --border-radius: 999px;
+  --border-color: #ffffff;
+  --color: #ffffff;
+}

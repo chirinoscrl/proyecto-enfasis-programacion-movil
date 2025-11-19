@@ -1,0 +1,61 @@
+<ion-content class="login-bg" fullscreen>
+  <div class="login-container">
+    <div class="card">
+      <div class="title-area">
+        <h1 class="app-title-top">RUNNER</h1>
+        <h2 class="app-title-bottom">MULTIMUNDOS</h2>
+        <p class="subtitle">
+          Para guardar tu puntuación y progreso, inicia sesión o crea tu cuenta.
+        </p>
+      </div>
+
+      <form (ngSubmit)="onLogin()" class="form">
+        <label class="field-label">Correo</label>
+        <ion-input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          fill="outline">
+        </ion-input>
+
+        <label class="field-label">Contraseña</label>
+        <ion-input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          fill="outline">
+        </ion-input>
+
+        <div *ngIf="errorMessage" class="error">
+          {{ errorMessage }}
+        </div>
+
+        <ion-button
+          expand="block"
+          type="submit"
+          class="btn-main">
+          Entrar
+        </ion-button>
+
+        <div class="or">o</div>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          class="btn-guest"
+          (click)="onGuest()">
+          Jugar como invitado
+        </ion-button>
+
+        <div class="register">
+          ¿No tienes cuenta?
+          <button type="button" (click)="goToRegister()">
+            Crear cuenta
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</ion-content>

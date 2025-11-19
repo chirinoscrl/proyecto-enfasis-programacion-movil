@@ -1,0 +1,68 @@
+/* src/app/pages/gameplay/gameplay.page.scss */
+/* Aquí hago que el componente ocupe toda la altura disponible */
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Aquí configuro el fondo general del contenido */
+ion-content {
+  --background: #000000;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Aquí centro el contenedor del juego */
+.game-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000000;
+}
+
+/* Aquí fijo el área donde Phaser dibuja el juego,
+   respetando una relación 4:3 para que se vea bien en móvil y escritorio */
+#game-container {
+  width: 100%;
+  max-width: 800px;
+  aspect-ratio: 4 / 3;
+  background-color: #000000;
+}
+
+/* Aquí coloco los botones en una barra inferior */
+.buttons-wrapper {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0 16px;
+  background-color: #111111;
+}
+
+/* Aquí doy estilo a los botones inferiores */
+.ui-button {
+  padding: 8px 14px;
+  border-radius: 4px;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #1976d2;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+/* Aquí pongo un pequeño efecto al pasar el cursor en escritorio */
+.ui-button:hover {
+  background-color: #1565c0;
+}
+
+/* Aquí ajusto el tamaño de los botones en pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .ui-button {
+    font-size: 12px;
+    padding: 6px 10px;
+    min-width: 100px;
+  }
+}

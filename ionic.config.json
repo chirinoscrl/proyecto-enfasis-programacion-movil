@@ -1,0 +1,7 @@
+{
+  "name": "runner-multimundos",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
