@@ -1,0 +1,80 @@
+# Compiled code
+/dist/
+/tmp/
+/out-tsc/
+/bazel-out/
+
+# Dependencies
+/node_modules/
+/platforms/
+/plugins/
+/www/
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.iml
+*.swp
+*.swo
+*~
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage/
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Android/Gradle
+.gradle/
+build/
+/android/.gradle/
+/android/app/build/
+/android/build/
+/android/local.properties
+/android/.idea/
+/android/captures/
+/android/*.iml
+/android/.externalNativeBuild/
+/android/.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Gradle files
+!gradle/wrapper/gradle-wrapper.jar
+
+# Java
+*.class
+
+# Log files
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Capacitor
+/android/app/src/main/assets/public/
