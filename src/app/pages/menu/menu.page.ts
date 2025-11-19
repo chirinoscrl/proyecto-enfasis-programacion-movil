@@ -1,6 +1,7 @@
 // src/app/pages/menu/menu.page.ts
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 interface RunnerStats {
   level: number;
@@ -32,7 +33,7 @@ export class MenuPage implements OnInit {
   // Aquí marco si el jugador es invitado
   isGuest = true;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private auth: AuthService) {}
 
   ngOnInit(): void {
     this.loadPlayerInfo();
@@ -40,64 +41,35 @@ export class MenuPage implements OnInit {
     this.loadStats();
   }
 
-  // Aquí intento leer la info del usuario desde localStorage
-  private loadPlayerInfo(): void {
-    try {
-      // Aquí pruebo varias claves posibles para evitar depender de un solo nombre
-      const possibleKeys = ['userProfile', 'currentUser', 'user'];
-
-      let profile: any = null;
-
-      for (const key of possibleKeys) {
-        const raw = window.localStorage.getItem(key);
-        if (raw) {
-          profile = JSON.parse(raw);
-          break;
-        }
-      }
-
-      if (!profile) {
-        this.isGuest = true;
-        this.playerName = 'Invitado';
-        return;
-      }
-
-      // Aquí intento sacar un nombre legible del perfil
-      const name =
-        profile.name ??
-        profile.fullName ??
-        profile.username ??
-        profile.email;
-
-      this.playerName = name || 'Jugador';
-      this.isGuest = false;
-
-    } catch {
-      this.isGuest = true;
-      this.playerName = 'Invitado';
-    }
+  // Aquí recargo datos cada vez que vuelvo a esta página
+  ionViewWillEnter(): void {
+    this.loadPlayerInfo();
+    this.loadAvatar();
   }
 
-  // Aquí cargo el avatar guardado en localStorage
-  private loadAvatar(): void {
-    let storedKey: string | null = null;
+  // Aquí leo la info del usuario desde AuthService
+  private loadPlayerInfo(): void {
+    const currentUser = this.auth.getCurrentUser();
 
-    try {
-      // Aquí intento varias claves por si la pantalla de avatar usa otro nombre
-      storedKey =
-        window.localStorage.getItem('selectedAvatarKey') ||
-        window.localStorage.getItem('avatarKey') ||
-        window.localStorage.getItem('avatar');
-    } catch {
-      storedKey = null;
-    }
-
-    if (!storedKey) {
-      this.setAvatarFromKey('cat-black');
+    if (!currentUser) {
+      this.isGuest = true;
+      this.playerName = 'Invitado';
       return;
     }
 
-    this.setAvatarFromKey(storedKey);
+    this.isGuest = this.auth.isGuest();
+    this.playerName = currentUser.name || 'Jugador';
+  }
+
+  // Aquí cargo el avatar guardado desde AuthService
+  private loadAvatar(): void {
+    const currentUser = this.auth.getCurrentUser();
+
+    if (currentUser?.avatarType) {
+      this.setAvatarFromKey(currentUser.avatarType);
+    } else {
+      this.setAvatarFromKey('black');
+    }
   }
 
   // Aquí convierto la clave en una ruta de imagen
@@ -111,7 +83,7 @@ export class MenuPage implements OnInit {
 
     // Si solo recibo la clave, la convierto a ruta dentro de assets/cats
     this.avatarKey = key;
-    this.avatarSrc = `assets/cats/${key}.png`;
+    this.avatarSrc = `assets/cats/cat-${key}.png`;
   }
 
   // Aquí manejo el error si la imagen del avatar no carga
@@ -175,14 +147,8 @@ export class MenuPage implements OnInit {
 
   // Aquí manejo el botón SALIR de abajo
   logout(): void {
-    // Borro solo los datos de usuario real
-    window.localStorage.removeItem('userProfile');
-    window.localStorage.removeItem('currentUser');
-    window.localStorage.removeItem('user');
-
-    window.localStorage.removeItem('selectedAvatarKey');
-    window.localStorage.removeItem('avatarKey');
-    window.localStorage.removeItem('avatar');
+    // Uso el método logout del AuthService
+    this.auth.logout();
 
     if (!this.isGuest) {
       window.localStorage.removeItem('runnerStats');
@@ -196,7 +162,7 @@ export class MenuPage implements OnInit {
     this.totalDistance = 0;
     this.totalCoins = 0;
 
-    this.setAvatarFromKey('cat-black');
+    this.setAvatarFromKey('black');
 
     // Aquí envío al login
     this.router.navigate(['/login']);

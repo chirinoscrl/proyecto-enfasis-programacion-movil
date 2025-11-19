@@ -20,6 +20,8 @@ export class AuthService {
 
   constructor() {
     this.loadFromStorage();
+    // Asegura que al iniciar el servicio también exista el snapshot de perfil
+    this.syncProfileStorage();
   }
 
   // Carga usuarios y usuario actual desde localStorage
@@ -35,6 +37,39 @@ export class AuthService {
   private saveToStorage(): void {
     localStorage.setItem(this.USERS_KEY, JSON.stringify(this.users));
     localStorage.setItem(this.CURRENT_KEY, JSON.stringify(this.currentUser));
+    this.syncProfileStorage();
+  }
+
+  // Convierte el tipo de avatar en una ruta de imagen dentro de assets
+  private getAvatarSrc(type?: string): string {
+    const key = (type || '').trim();
+    const allowed = ['tabby', 'persian', 'siamese', 'black'];
+    const finalKey = allowed.includes(key) ? key : 'black';
+    return `assets/cats/cat-${finalKey}.png`;
+  }
+
+  // Sincroniza un snapshot ligero del perfil para otras pantallas que leen de localStorage
+  private syncProfileStorage(): void {
+    try {
+      if (this.currentUser) {
+        const avatarSrc = this.getAvatarSrc(this.currentUser.avatarType);
+        const profileSnapshot = {
+          name: this.currentUser.name,
+          email: this.currentUser.email,
+        };
+        localStorage.setItem('userProfile', JSON.stringify(profileSnapshot));
+        // Guardamos también la selección de avatar en las claves que usa el menú
+        localStorage.setItem('selectedAvatarKey', avatarSrc);
+        localStorage.setItem('avatarKey', avatarSrc);
+      } else {
+        // Si no hay usuario, limpiar las claves de perfil auxiliares
+        localStorage.removeItem('userProfile');
+        localStorage.removeItem('selectedAvatarKey');
+        localStorage.removeItem('avatarKey');
+      }
+    } catch {
+      // Silenciar errores de acceso a localStorage (modo privado, etc.)
+    }
   }
 
   getCurrentUser(): GameUser | null {
@@ -53,7 +88,7 @@ export class AuthService {
       return { ok: false, message: 'Ya existe una cuenta con ese correo.' };
     }
 
-    const user: GameUser = { name, email, password };
+    const user: GameUser = { name, email, password, avatarType: 'black' };
     this.users.push(user);
     this.currentUser = user;
     this.saveToStorage();
@@ -80,7 +115,8 @@ export class AuthService {
       guest = {
         email: 'guest@runner',
         password: '',
-        name: 'Invitado'
+        name: 'Invitado',
+        avatarType: 'black'
       };
       this.users.push(guest);
     }
@@ -104,6 +140,10 @@ export class AuthService {
   logout(): void {
     this.currentUser = null;
     localStorage.removeItem(this.CURRENT_KEY);
+    // Limpia también las claves auxiliares para el menú
+    localStorage.removeItem('userProfile');
+    localStorage.removeItem('selectedAvatarKey');
+    localStorage.removeItem('avatarKey');
   }
 
   // Para debug si lo necesitas
