@@ -1,47 +1,55 @@
 <!-- src/app/pages/game-over/game-over.page.html -->
 <ion-content fullscreen>
-  <div class="go-wrapper" *ngIf="run as r">
-    <div class="go-card">
-      <div class="go-title">
-        {{ r.completed ? 'Nivel completado' : 'Game Over' }}
-      </div>
-      <div class="go-subtitle">{{ r.worldName }}</div>
+  <ion-grid class="ion-no-padding h-100" *ngIf="run as r">
+    <ion-row class="ion-justify-content-center ion-align-items-center h-100">
+      <ion-col size="12" size-md="8" size-lg="6">
+        <div class="go-card">
+          <div class="go-title">
+            {{ r.completed ? 'Nivel completado' : 'Game Over' }}
+          </div>
+          <div class="go-subtitle">{{ r.worldName }}</div>
 
-      <div class="go-stats">
-        <div class="go-row">
-          <span>Distancia</span>
-          <span>{{ r.distance }} m</span>
-        </div>
-        <div class="go-row">
-          <span>Monedas</span>
-          <span>{{ r.coins }}</span>
-        </div>
-        <div class="go-row">
-          <span>Vidas restantes</span>
-          <span>{{ r.livesLeft }}</span>
-        </div>
-        <div class="go-row">
-          <span>Tiempo usado</span>
-          <span>{{ r.timeUsed }} s</span>
-        </div>
-      </div>
+          <div class="go-stats">
+            <div class="go-row">
+              <span>Distancia</span>
+              <span>{{ r.distance }} m</span>
+            </div>
+            <div class="go-row">
+              <span>Monedas</span>
+              <span>{{ r.coins }}</span>
+            </div>
+            <div class="go-row">
+              <span>Vidas restantes</span>
+              <span>{{ r.livesLeft }}</span>
+            </div>
+            <div class="go-row">
+              <span>Tiempo usado</span>
+              <span>{{ r.timeUsed }} s</span>
+            </div>
+          </div>
 
-      <div class="go-actions">
-        <button class="go-btn primary" (click)="tryAgain()">VOLVER A INTENTAR</button>
-        <button class="go-btn secondary" (click)="goToLeaderboard()">VER TABLA</button>
-        <button class="go-btn tertiary" (click)="goToMenu()">MENÚ PRINCIPAL</button>
-      </div>
-    </div>
-  </div>
+          <div class="go-actions">
+            <button class="go-btn primary" (click)="tryAgain()">VOLVER A INTENTAR</button>
+            <button class="go-btn secondary" (click)="goToLeaderboard()">VER TABLA</button>
+            <button class="go-btn tertiary" (click)="goToMenu()">MENÚ PRINCIPAL</button>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 
-  <div class="go-wrapper" *ngIf="!run">
-    <div class="go-card">
-      <div class="go-title">Sin partida</div>
-      <div class="go-subtitle">No hay datos de la última partida.</div>
-      <div class="go-actions">
-        <button class="go-btn primary" (click)="tryAgain()">JUGAR</button>
-        <button class="go-btn tertiary" (click)="goToMenu()">MENÚ PRINCIPAL</button>
-      </div>
-    </div>
-  </div>
+  <ion-grid class="ion-no-padding h-100" *ngIf="!run">
+    <ion-row class="ion-justify-content-center ion-align-items-center h-100">
+      <ion-col size="12" size-md="8" size-lg="6">
+        <div class="go-card">
+          <div class="go-title">Sin partida</div>
+          <div class="go-subtitle">No hay datos de la última partida.</div>
+          <div class="go-actions">
+            <button class="go-btn primary" (click)="tryAgain()">JUGAR</button>
+            <button class="go-btn tertiary" (click)="goToMenu()">MENÚ PRINCIPAL</button>
+          </div>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

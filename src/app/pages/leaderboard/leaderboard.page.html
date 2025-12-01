@@ -3,14 +3,14 @@
   <div class="lb-wrapper">
     <div class="lb-card">
       <div class="lb-header">
-        <div class="lb-title">Mejores puntajes</div>
+        <div class="lb-title">Ranking de Jugadores</div>
         <div class="lb-tabs">
           <button
             class="lb-tab"
             [class.lb-tab--active]="activeFilter === 'all'"
             (click)="setFilter('all')"
           >
-            TODOS
+            TOTAL
           </button>
           <button
             class="lb-tab"
@@ -36,31 +36,35 @@
         </div>
       </div>
 
-      <div class="lb-body" *ngIf="runs.length; else empty">
+      <div class="lb-body" *ngIf="players.length; else empty">
         <table class="lb-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>Mundo</th>
+              <th>Jugador</th>
+              <th>Nivel</th>
+              <th>Partidas</th>
               <th>Distancia</th>
               <th>Monedas</th>
-              <th>Tiempo</th>
+              <th>Score</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let r of runs; let i = index">
+            <tr *ngFor="let p of players; let i = index">
               <td>{{ i + 1 }}</td>
-              <td>{{ r.worldName }}</td>
-              <td>{{ r.distance }} m</td>
-              <td>{{ r.coins }}</td>
-              <td>{{ r.timeUsed }} s</td>
+              <td>{{ p.name }}</td>
+              <td>{{ p.currentLevel }}</td>
+              <td>{{ p.runs }}</td>
+              <td>{{ p.totalDistance }} m</td>
+              <td>{{ p.totalCoins }}</td>
+              <td>{{ p.totalScore }}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <ng-template #empty>
-        <div class="lb-empty">Aún no hay partidas registradas.</div>
+        <div class="lb-empty">Aún no hay jugadores registrados.</div>
       </ng-template>
 
       <div class="lb-actions">

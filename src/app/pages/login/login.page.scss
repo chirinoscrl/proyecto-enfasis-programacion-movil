@@ -1,15 +1,14 @@
   .login-bg {
     --background: linear-gradient(145deg, #5b2dd5, #7b3ff0);
-    display: flex;
-    justify-content: center;
-    align-items: center;
   }
 
   .login-container {
     width: 100%;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: center; /* horizontally center */
+    align-items: flex-start; /* top-align vertically */
+    padding: 12vh 16px 24px; /* upper-middle placement with responsive top space */
+    box-sizing: border-box;
   }
 
   .card {
@@ -50,6 +49,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    text-align: left; /* ensure left-aligned labels and inputs */
   }
 
   .field-label {

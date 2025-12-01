@@ -2,6 +2,8 @@
 import { AfterViewInit, Component, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import * as Phaser from 'phaser';
+import { AuthService } from '../../services/auth.service';
+import { StatsService as GameStateService } from '../../services/game-state.service';
 
 @Component({
   selector: 'app-gameplay',
@@ -14,7 +16,11 @@ export class GameplayPage implements AfterViewInit, OnDestroy {
   private game?: Phaser.Game;
   private menuEventHandler = () => this.goToMenu();
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private auth: AuthService,
+    private gameState: GameStateService
+  ) {}
 
   ngAfterViewInit(): void {
     window.addEventListener('cat-game-menu', this.menuEventHandler as any);
@@ -27,6 +33,8 @@ export class GameplayPage implements AfterViewInit, OnDestroy {
 
     CatPlatformerScene.initialWorldIndex = Phaser.Math.Clamp(initialWorld, 0, 2);
     CatPlatformerScene.initialAvatarKey = avatarKey;
+    CatPlatformerScene.authService = this.auth;
+    CatPlatformerScene.gameStateService = this.gameState;
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
@@ -125,6 +133,8 @@ class CatPlatformerScene extends Phaser.Scene {
   static current: CatPlatformerScene | null = null;
   static initialWorldIndex = 0;
   static initialAvatarKey = 'cat-black';
+  static authService: AuthService | null = null;
+  static gameStateService: GameStateService | null = null;
 
   // 0 = Desierto, 1 = Bosque, 2 = Ciudad
   private worldConfigs = [
@@ -522,12 +532,6 @@ class CatPlatformerScene extends Phaser.Scene {
     const meters = Math.floor(this.player.x / this.pixelsPerMeter);
     const total = this.levelMeters;
     this.distanceText.setText(`Distancia: ${meters} m de ${total} m`);
-
-    if (meters > this.lastMeterReported) {
-      const delta = meters - this.lastMeterReported;
-      this.lastMeterReported = meters;
-      this.addDistanceToProfile(delta);
-    }
   }
 
   // -------------------------------------------------
@@ -1116,63 +1120,37 @@ class CatPlatformerScene extends Phaser.Scene {
   // -------------------------------------------------
   // Estadísticas globales del jugador
   // -------------------------------------------------
-  private loadPlayerStats(): {
-    level: number;
-    totalDistance: number;
-    totalCoins: number;
-    runs: number;
-  } {
-    const key = 'runnerStats';
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return {
-          level: parsed.level ?? 1,
-          totalDistance: parsed.totalDistance ?? 0,
-          totalCoins: parsed.totalCoins ?? 0,
-          runs: parsed.runs ?? 0,
-        };
-      }
-    } catch {}
+  private finalizeRunStats(): void {
+    // Obtengo el usuario actual
+    const authService = CatPlatformerScene.authService;
+    const gameStateService = CatPlatformerScene.gameStateService;
 
-    return {
-      level: 1,
-      totalDistance: 0,
-      totalCoins: 0,
-      runs: 0,
-    };
-  }
-
-  private savePlayerStats(stats: {
-    level: number;
-    totalDistance: number;
-    totalCoins: number;
-    runs: number;
-  }): void {
-    try {
-      window.localStorage.setItem('runnerStats', JSON.stringify(stats));
-    } catch {}
-  }
-
-  private addDistanceToProfile(deltaMeters: number): void {
-    if (deltaMeters <= 0) return;
-
-    const stats = this.loadPlayerStats();
-    stats.totalDistance += deltaMeters;
-
-    const newLevel = 1 + Math.floor(stats.totalDistance / 300);
-    if (newLevel > stats.level) {
-      stats.level = newLevel;
+    if (!authService || !gameStateService) {
+      return;
     }
 
-    this.savePlayerStats(stats);
-  }
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser) {
+      return;
+    }
 
-  private finalizeRunStats(): void {
-    const stats = this.loadPlayerStats();
-    stats.runs += 1;
-    stats.totalCoins += this.coinsCount;
-    this.savePlayerStats(stats);
+    // Calculo la distancia final recorrida
+    const distanceMeters = this.player ? Math.floor(this.player.x / this.pixelsPerMeter) : 0;
+
+    // Calculo el score (distancia + monedas * 10)
+    const score = distanceMeters + this.coinsCount * 10;
+
+    // Mapeo worldIndex a worldName
+    const worldNames = ['desert', 'forest', 'city'];
+    const worldName = worldNames[this.worldIndex] || 'desert';
+
+    // Registro la partida en el sistema
+    gameStateService.registerRun(
+      currentUser,
+      worldName,
+      score,
+      distanceMeters,
+      this.coinsCount
+    );
   }
 }

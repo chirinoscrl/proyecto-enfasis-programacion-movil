@@ -1,15 +1,14 @@
 .register-bg {
   --background: linear-gradient(145deg, #7b3ff0, #5b2dd5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .register-container {
   width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: center; /* horizontally center */
+  align-items: flex-start; /* top-align vertically */
+  padding: 10vh 16px 24px; /* upper-middle placement */
+  box-sizing: border-box;
 }
 
 .card {
@@ -43,6 +42,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  text-align: left; /* left-align labels and inputs */
 }
 
 .field-label {

@@ -3,6 +3,10 @@ ion-content {
   --background: radial-gradient(circle at top, #5a2cff 0, #2b0c6b 55%, #19073e 100%);
 }
 
+.h-100 {
+  height: 100%;
+}
+
 .go-wrapper {
   max-width: 900px;
   margin: 60px auto;

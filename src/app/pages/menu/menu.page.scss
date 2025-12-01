@@ -3,8 +3,9 @@
 .menu-bg {
   --background: linear-gradient(135deg, #3d00ff, #6200ff);
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: center; /* horizontally center content */
+  align-items: flex-start; /* align block to top under header */
+  padding-top: 16px;
 }
 
 .menu-wrapper {

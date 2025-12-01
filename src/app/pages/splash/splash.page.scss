@@ -2,15 +2,11 @@
   --background: linear-gradient(180deg, #5a29c8, #3b1fa8);
 }
 
-.splash-frame {
+.h-100 {
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 16px;
-  color: #fff;
 }
+
+/* Old .splash-frame no longer used */
 
 .splash-card {
   width: 100%;

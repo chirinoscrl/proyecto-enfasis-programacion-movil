@@ -1,8 +1,9 @@
 // src/app/pages/leaderboard/leaderboard.page.ts
 import { Component } from '@angular/core';
 import { NavController } from '@ionic/angular';
-import { StatsService, RunResult } from '../../services/stats.service';
-import { WorldId } from '../../services/world.service';
+import { StatsService as GameStateService, PlayerStats } from '../../services/game-state.service';
+
+type WorldFilter = 'all' | 'desert' | 'forest' | 'city';
 
 @Component({
   selector: 'app-leaderboard',
@@ -11,26 +12,27 @@ import { WorldId } from '../../services/world.service';
   standalone: false,
 })
 export class LeaderboardPage {
-  runs: RunResult[] = [];
-  activeFilter: WorldId | 'all' = 'all';
+  players: PlayerStats[] = [];
+  activeFilter: WorldFilter = 'all';
 
   constructor(
-    private statsService: StatsService,
+    private gameState: GameStateService,
     private navCtrl: NavController
   ) {
-    this.loadRuns();
+    this.loadPlayers();
   }
 
-  private loadRuns() {
-    this.runs =
-      this.activeFilter === 'all'
-        ? this.statsService.getLeaderboard()
-        : this.statsService.getLeaderboard(this.activeFilter);
+  private loadPlayers() {
+    if (this.activeFilter === 'all') {
+      this.players = this.gameState.getPlayerLeaderboard();
+    } else {
+      this.players = this.gameState.getPlayerLeaderboard(this.activeFilter);
+    }
   }
 
-  setFilter(filter: WorldId | 'all') {
+  setFilter(filter: WorldFilter) {
     this.activeFilter = filter;
-    this.loadRuns();
+    this.loadPlayers();
   }
 
   goBack() {

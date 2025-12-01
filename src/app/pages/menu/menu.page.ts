@@ -2,13 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-
-interface RunnerStats {
-  level: number;
-  totalDistance: number;
-  totalCoins: number;
-  runs: number;
-}
+import { StatsService as GameStateService } from '../../services/game-state.service';
 
 @Component({
   selector: 'app-menu',
@@ -33,7 +27,11 @@ export class MenuPage implements OnInit {
   // Aquí marco si el jugador es invitado
   isGuest = true;
 
-  constructor(private router: Router, private auth: AuthService) {}
+  constructor(
+    private router: Router,
+    private auth: AuthService,
+    private gameState: GameStateService
+  ) {}
 
   ngOnInit(): void {
     this.loadPlayerInfo();
@@ -45,6 +43,7 @@ export class MenuPage implements OnInit {
   ionViewWillEnter(): void {
     this.loadPlayerInfo();
     this.loadAvatar();
+    this.loadStats();
   }
 
   // Aquí leo la info del usuario desde AuthService
@@ -94,8 +93,10 @@ export class MenuPage implements OnInit {
 
   // Aquí cargo las estadísticas del jugador
   private loadStats(): void {
-    // Si es invitado no leo estadísticas guardadas
-    if (this.isGuest) {
+    const currentUser = this.auth.getCurrentUser();
+
+    // Si es invitado o no hay usuario, muestro valores por defecto
+    if (!currentUser || this.isGuest) {
       this.level = 1;
       this.totalRuns = 0;
       this.totalDistance = 0;
@@ -103,21 +104,20 @@ export class MenuPage implements OnInit {
       return;
     }
 
-    try {
-      const raw = window.localStorage.getItem('runnerStats');
-      if (!raw) {
-        return;
-      }
+    // Obtengo las estadísticas del jugador desde GameStateService
+    const stats = this.gameState.getPlayerStats(currentUser.email);
 
-      const data: RunnerStats = JSON.parse(raw);
-
-      this.level = data.level ?? 1;
-      this.totalRuns = data.runs ?? 0;
-      this.totalDistance = data.totalDistance ?? 0;
-      this.totalCoins = data.totalCoins ?? 0;
-
-    } catch {
-      // Si algo falla dejo los valores por defecto
+    if (stats) {
+      this.level = stats.currentLevel ?? 1;
+      this.totalRuns = stats.runs ?? 0;
+      this.totalDistance = stats.totalDistance ?? 0;
+      this.totalCoins = stats.totalCoins ?? 0;
+    } else {
+      // Si no hay estadísticas aún, muestro valores por defecto
+      this.level = 1;
+      this.totalRuns = 0;
+      this.totalDistance = 0;
+      this.totalCoins = 0;
     }
   }
 
@@ -149,10 +149,6 @@ export class MenuPage implements OnInit {
   logout(): void {
     // Uso el método logout del AuthService
     this.auth.logout();
-
-    if (!this.isGuest) {
-      window.localStorage.removeItem('runnerStats');
-    }
 
     // Restauro estado visual del menú
     this.playerName = 'Invitado';

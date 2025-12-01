@@ -27,14 +27,16 @@
 
       <div class="section">
         <div class="section-title">Audio</div>
-        <ion-item lines="none" class="audio-item">
-          <ion-label>Música</ion-label>
-          <ion-toggle [(ngModel)]="musicEnabled"></ion-toggle>
-        </ion-item>
-        <ion-item lines="none" class="audio-item">
-          <ion-label>Efectos</ion-label>
-          <ion-toggle [(ngModel)]="effectsEnabled"></ion-toggle>
-        </ion-item>
+        <ion-list lines="none">
+          <ion-item class="audio-item">
+            <ion-label>Música</ion-label>
+            <ion-toggle slot="end" [(ngModel)]="musicEnabled"></ion-toggle>
+          </ion-item>
+          <ion-item class="audio-item">
+            <ion-label>Efectos</ion-label>
+            <ion-toggle slot="end" [(ngModel)]="effectsEnabled"></ion-toggle>
+          </ion-item>
+        </ion-list>
       </div>
 
       <div class="section">

@@ -113,6 +113,46 @@ export class StatsService {
     return [...filtered].sort((a, b) => b.score - a.score).slice(0, 20);
   }
 
+  // Ranking de jugadores por estadísticas agregadas
+  getPlayerLeaderboard(world?: string): PlayerStats[] {
+    if (!world) {
+      // Retornar stats totales ordenadas por score total
+      return [...this.stats].sort((a, b) => b.totalScore - a.totalScore);
+    }
+
+    // Calcular stats agregadas solo para el mundo específico
+    const worldRuns = this.runs.filter(r => r.world === world);
+
+    // Agrupar por jugador
+    const playerStatsMap = new Map<string, PlayerStats>();
+
+    worldRuns.forEach(run => {
+      let playerStat = playerStatsMap.get(run.playerEmail);
+
+      if (!playerStat) {
+        playerStat = {
+          email: run.playerEmail,
+          name: run.playerName,
+          totalScore: 0,
+          totalDistance: 0,
+          totalCoins: 0,
+          runs: 0,
+          currentLevel: 1
+        };
+        playerStatsMap.set(run.playerEmail, playerStat);
+      }
+
+      playerStat.totalScore += run.score;
+      playerStat.totalDistance += run.distance;
+      playerStat.totalCoins += run.coins;
+      playerStat.runs += 1;
+      playerStat.currentLevel = 1 + Math.floor(playerStat.runs / 3);
+    });
+
+    // Convertir a array y ordenar por score
+    return Array.from(playerStatsMap.values()).sort((a, b) => b.totalScore - a.totalScore);
+  }
+
   resetPlayerStats(email: string | null): void {
     if (!email) {
       return;
